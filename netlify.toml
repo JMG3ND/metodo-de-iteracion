@@ -1,3 +1,8 @@
+[build]
+  command = "npm run build"
+  functions = "netlify/functions"
+  publish = "dist"
+
 [dev]                                          
    framework = "#custom"                                                    
    command = "npm run dev"             
@@ -5,3 +10,13 @@
    debug = true
    port = 8888
    publish = "dist"
+   
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"
+
+[[headers]]
+  # Define which paths this specific [[headers]] block will cover.
+  for = "/*"
+    [headers.values]
+    Access-Control-Allow-Origin = "*"
