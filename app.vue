@@ -1,114 +1,111 @@
 <template>
 	<div class="screen">
-		<UForm class="form" :state="state" :validate="validate" @submit="submit">
-			<UFormGroup v-slot="{ error }" required label="Voltaje" description="Voltaje que alimenta el circuito en V"
-				name="voltaje">
+		<UForm class="form" :state="state" :validate="state.validate" @submit="submit">
+			<header style="text-align: center;">
+				<h1>MÉTODO DE ITERACIÓN</h1>
+				<h1>PARA RESOLVER CIRCUITOS CON DIODOS</h1>
+			</header>
+			<UFormGroup v-slot="{ error }" required label="Voltaje"
+				:description="`Fuente de voltaje en ${state.unidadVoltaje}`" name="voltaje">
 				<div class="form__input">
 					<IconsVoltaje />
-					<UInput v-model="state.voltaje.valor" type="number" step="0.1"
+					<UInput v-model="state.coeficienteVoltaje" type="number" step="0.1"
 						:trailing-icon="error && 'i-heroicons-exclamation-triangle-20-solid'" />
-					<USelect v-model="state.voltaje.unidad" :options="unidadesV" />
+					<USelect v-model="state.unidadVoltaje" :options="state.unidadesV" />
 				</div>
 			</UFormGroup>
-			<UFormGroup v-slot="{ error }" required label="Resistencia" description="Valor de la resistencia en Ω"
-				name="resistencia">
+			<UFormGroup v-slot="{ error }" required label="Resistencia"
+				:description="`Valor de la resistencia en ${state.unidadResistencia}`" name="resistencia">
 				<div class="form__input">
 					<IconsResistencia />
-					<UInput v-model="state.resistencia.valor" type="number" step="0.1"
+					<UInput v-model="state.coeficienteResistencia" type="number" step="0.1"
 						:trailing-icon="error && 'i-heroicons-exclamation-triangle-20-solid'" />
-					<USelect v-model="state.resistencia.unidad" :options="unidadesR" />
+					<USelect v-model="state.unidadResistencia" :options="state.unidadesR" />
 				</div>
 			</UFormGroup>
-			<UFormGroup label="Corriente de saturación" description="Valor de la corriente de saturación en A"
-				name="corrienteS">
-				<UCheckbox v-model="state.corrienteDeSaturacion.incluirIS" name="incluir"
-					label="Incluir corriente de saturación" />
-				<div class="form__input">
-					<IconsCorriente />
-					<UInput style="width: 4rem;" :disabled="!state.corrienteDeSaturacion.incluirIS"
-						v-model="state.corrienteDeSaturacion.coeficiente" type="number" step="0.1" />
-					<span>x10^</span>
-					<UInput style="width: 4rem;" :disabled="!state.corrienteDeSaturacion.incluirIS"
-						v-model="state.corrienteDeSaturacion.potencia" type="number" />
-				</div>
-			</UFormGroup>
-			<UFormGroup required label="Material del diodo" description="Definen el material del diodo" name="material">
-				<div class="form__input">
-					<IconsVoltaje />
-					<div class="from__raidoButtons">
-						<URadio name="silicio" value='0.7' label="Silicio" v-model="state.material" />
-						<URadio name="germanio" value='0.3' label="Germanio" v-model="state.material" />
-					</div>
-					<UContainer>{{ state.material }} V</UContainer>
-				</div>
-			</UFormGroup>
+			<div style="text-align: center;">
+				<UButton @click="showConfigDiode = true">
+					<IconsConfDiode />Configurar Diodo
+				</UButton>
+			</div>
 			<UFormGroup required label="Presición de la repuesta" description="Define cantidad de cifras significativas"
 				name="presicion">
 				<div class="form__presicion-container">
-					<URange :min=0 :max=8 v-model="state.presicion" />
-					<span>{{ state.presicion }}</span>
+					<URange :min=0 :max=8 v-model="state.presicionDeRespuesta" />
+					<span>{{ state.presicionDeRespuesta }}</span>
 				</div>
 			</UFormGroup>
 			<div class="form__button-container">
 				<UButton type="submit" icon="i-heroicons-pencil-square">Procesar</UButton>
 			</div>
+			<UModal class="form__modal" v-model="showConfigDiode">
+				<div class="form__modal-container">
+					<UFormGroup label="Material del diodo" description="Definen el material del diodo">
+						<div class="form__input">
+							<IconsVoltaje />
+							<div class="from__raidoButtons">
+								<URadio name="silicio" value='0.7' label="Silicio" v-model="state.voltajeDiodo" />
+								<URadio name="germanio" value='0.3' label="Germanio" v-model="state.voltajeDiodo" />
+							</div>
+							<UContainer>{{ state.voltajeDiodo }} V</UContainer>
+						</div>
+					</UFormGroup>
+					<UFormGroup label="Corriente de saturación" description="Valor de la corriente de saturación en A"
+						name="corrienteS">
+						<div style="margin-bottom: 1rem;" class="form__input">
+							<IconsCorriente />
+							<URange :disabled="state.incluirIP" :min=-15 :max=-12 :step=0.1
+								v-model="state.potenciaCorrienteSaturacion" />
+							<div class="corrienteS">10<div class="corrienteS__potencia">
+									{{ state.potenciaCorrienteSaturacion }}</div>
+							</div>
+						</div>
+						<UCheckbox v-model="state.incluirIP" name="incluir" label="Incluir corriente propuesta" />
+						<div class="form__input">
+							<IconsCorriente />
+							<UInput :disabled="!state.incluirIP" v-model="state.idi" type="number" step="0.001" />
+						</div>
+					</UFormGroup>
+					<UFormGroup label="Factor de idealidad" description="Indica que tan ideal es el diodo">
+						<div class="form__input">
+							<IconsNIdealidad />
+							<URange :min=1 :max=2 :step=0.01 v-model="state.factorIdentidad" />
+							<div style="width: 3rem;">{{ state.factorIdentidad }}</div>
+						</div>
+					</UFormGroup>
+					<UFormGroup v-slot="{ error }" required label="Voltaje Termico" description="Voltaje térmico del diodo"
+						name="voltajeTermico">
+						<div class="form__input">
+							<IconsVoltaje />
+							<UInput v-model="state.voltajeTermico" type="number" step="0.0001"
+								:trailing-icon="error && 'i-heroicons-exclamation-triangle-20-solid'" />
+						</div>
+					</UFormGroup>
+				</div>
+			</UModal>
+			<div>
+				<span style="display: flex;">
+					<IconsVoltaje /> = {{ state.vd ? state.vd : "?" }}
+				</span>
+				<span style="display: flex;">
+					<IconsCorriente /> = {{ state.id ? state.id : "?" }}
+				</span>
+			</div>
 		</UForm>
-		<div>{{ iterador }}</div>
 	</div>
 </template>
 
 <script setup>
-// Estado de los datos del formulario
-const state = ref({
-	voltaje: {
-		valor: undefined,
-		unidad: "V"
-	},
-	resistencia: {
-		valor: undefined,
-		unidad: "Ω"
-	},
-	corrienteDeSaturacion: {
-		coeficiente: 1,
-		potencia: 1,
-		incluirIS: false
-	},
-	material: 0.7,
-	presicion: 2
-})
+const state = ref(new IterationMethod());
 
-// Función que se ejecuta para validar que los datos ingresados en el formulario sean correctos
-const validate = (state) => {
-	const { voltaje, resistencia, corrienteDeSaturacion } = state;
-	const errors = [];
-	if (!voltaje.valor || voltaje.valor == 0) errors.push({ path: 'voltaje', message: 'Bro, sin voltaje no hay corriente' });
-	if (!resistencia.valor || resistencia.valor == 0) errors.push({ path: 'resistencia', message: 'Se quemó...' });
-
-	// Control de validación para los datos de la corriente de saturación
-	const { coeficiente, potencia, incluirIS } = corrienteDeSaturacion;
-	if ((!coeficiente || coeficiente == 0 || !potencia) && incluirIS)
-		errors.push({ path: 'corrienteS', message: 'Para que lo activas pue' });
-
-	return errors
+// Método de iteración para calcular el voltaje y la corriente de trabajo del diodo
+function submit(state) {
+	const { incluirIP, idi } = state.data;
+	if (incluirIP) state.data.submit(idi);
+	else state.data.submit();
 }
 
-// Función que se ejecuta al hacer procesar los datos del formulario
-function submit(event) {
-	const { corrienteDeSaturacion, material, presicion, resistencia, voltaje } = event.data;
-	iterador.value.corrienteDeSaturacion = corrienteDeSaturacion.valor;
-	iterador.value.voltajeDiodo = material;
-	iterador.value.presicionDeRespuesta = presicion;
-	iterador.value.resistencia = resistencia.valor;
-	iterador.value.voltajeDelCircuito = voltaje.valor;
-	iterador.value.iteracion();
-}
-
-// Unidades para el formulario
-const unidadesV = ["mV", "V", "kV"];
-const unidadesR = ["Ω", "kΩ"];
-
-// Variables reactivas para mostrar la información
-const iterador = ref(new IterationMethod());
+const showConfigDiode = ref(false);
 </script>
 
 <style lang="scss">
@@ -144,6 +141,32 @@ const iterador = ref(new IterationMethod());
 			width: 50%;
 			text-align: center;
 		}
+	}
+
+	&__modal {
+		padding: 2rem 0;
+		width: fit-content;
+	}
+
+	&__modal-container {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 1rem;
+		margin: 0 auto;
+	}
+}
+
+.corrienteS {
+	position: relative;
+	width: 3rem;
+
+	&__potencia {
+		font-size: small;
+		position: absolute;
+		width: 3rem;
+		top: -0.5rem;
+		right: -2rem;
 	}
 }
 </style>
