@@ -63,7 +63,11 @@ export default class IterationMethod {
         return this.corrienteSaturacion() * Math.exp(this.voltajeDiodo / (this.factorIdentidad * this.voltajeTermico))
     }
 
-    submit(corriente_1 = this.corriente_1(), voltaje_1 = this.voltajeDiodo) {
+    voltajeDiodoc() {
+        return Number == typeof this.voltajeDiodo ? this.voltajeDiodo : parseFloat(this.voltajeDiodo);
+    }
+
+    submit(corriente_1 = this.corriente_1(), voltaje_1 = this.voltajeDiodoc()) {
         // Calculamos la corriente 2
         const corriente_2 = this.corriente_2(voltaje_1);
 

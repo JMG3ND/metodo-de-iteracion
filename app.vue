@@ -112,7 +112,7 @@ const showConfigDiode = ref(false);
 .screen {
 	display: flex;
 	flex-direction: column;
-	height: 100vh;
+	height: 90vh;
 	justify-content: center;
 	align-items: center;
 	gap: 1rem;
